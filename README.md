@@ -15,13 +15,18 @@ npm run preview    # 빌드 결과 확인
 
 로컬 주소(http)에서는 홈 화면 추가와 오프라인 동작을 확인할 수 없다. 배포 후 확인한다.
 
-## 배포 (GitHub Pages)
+## 배포
 
-1. GitHub에 저장소를 만들고 push한다.
-2. 저장소 Settings → Pages → Source를 **GitHub Actions**로 바꾼다.
-3. `main`에 push할 때마다 `.github/workflows/deploy.yml`이 테스트 → 빌드 → 배포한다.
-4. 배포 주소를 iPad Safari에서 열고 **공유 → 홈 화면에 추가**.
-5. `docs/ipad-checklist.md`로 확인한다.
+**Railway (주 배포):** https://web-production-ff0d6.up.railway.app
+
+- `main`에 push하면 Railway가 자동으로 빌드·배포한다. GitHub Actions 테스트가 통과한 커밋만 배포(`checkSuites`).
+- 설정은 `.railway/railway.ts`(Railway IaC): 빌드 `npm run build`, 시작 `npm start`(serve로 `dist` 서빙), 헬스체크 `/`.
+  설정을 바꾸면 `npx @railway/cli config plan`으로 확인 후 `config apply`.
+- `public/serve.json`: `sw.js`·`index.html`은 no-cache(새 버전이 iPad에 반영되도록), 해시 붙은 `assets/`는 1년 캐시.
+
+**GitHub Pages (보조):** https://8heoym.github.io/wax-pop-ball/ — `.github/workflows/deploy.yml`, 같은 push에서 테스트 후 배포.
+
+iPad에서는 배포 주소를 Safari로 열고 **공유 → 홈 화면에 추가**한 뒤 `docs/ipad-checklist.md`로 확인한다.
 
 ## 구조
 
