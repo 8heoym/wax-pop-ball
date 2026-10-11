@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Safari 기본 확대/축소를 막고 노치 영역까지 사용 (설계 문서 터치 규칙) -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="왁뿌볼" />
+    <meta name="theme-color" content="#E9CFA6" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+    <title>왁뿌볼 공방</title>
+  </head>
+  <body>
+    <canvas id="stage" role="img" aria-label="왁뿌볼 점토"></canvas>
+    <!-- 1A: 세로로 들면 글자 없이 '가로로 돌려주세요' 그림만 -->
+    <div id="rotate-hint" aria-hidden="true">
+      <div class="rotate-hint__device"></div>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

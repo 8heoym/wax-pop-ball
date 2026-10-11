@@ -1,0 +1,71 @@
+/* 디자인 토큰 (Design review 13A) */
+:root {
+  --color-wood: #e9cfa6;
+  --color-wood-dark: #c9a574;
+  --color-ink: #3b2a1e;
+  --color-accent: #ff7a59;
+  --color-ui-surface: #fff8ee;
+  --size-touch-min: 64px;
+  --motion-fast: 0.2s;
+  --motion-mid: 0.5s;
+  --motion-slow: 0.8s;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--color-wood);
+  color: var(--color-ink);
+  /* Safari 기본 동작 끄기: 길게 누르기 선택/콜아웃, 더블탭 확대 */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#stage {
+  display: block;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  touch-action: none;
+}
+
+#rotate-hint {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-wood);
+}
+
+.rotate-hint__device {
+  width: 96px;
+  height: 144px;
+  border: 8px solid var(--color-ink);
+  border-radius: 20px;
+  animation: rotate-device 2s ease-in-out infinite;
+}
+
+@keyframes rotate-device {
+  0%,
+  30% {
+    transform: rotate(0deg);
+  }
+  60%,
+  100% {
+    transform: rotate(-90deg);
+  }
+}
+
+@media (orientation: portrait) {
+  #rotate-hint {
+    display: flex;
+  }
+}
