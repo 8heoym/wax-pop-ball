@@ -31,17 +31,21 @@
         <div id="medal" class="medal press-only" role="img" aria-label="내가 만든 색"></div>
       </div>
 
+      <!-- 왼쪽 아래: 새 점토는 두 모드 모두, 이전 공은 섞기 모드만 -->
+      <div class="hud__bottom-left">
+        <button id="new-clay" class="icon-button new-clay" aria-label="새 점토 (두 번 누르기)">
+          <svg class="new-clay__ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" /></svg>
+          <span class="new-clay__label" aria-hidden="true">한 번 더!</span>
+        </button>
+        <button id="previous-ball" class="previous-ball mix-only" aria-label="이전 공 되불러오기" hidden></button>
+      </div>
+
       <div class="hud__bottom mix-only">
-        <button id="previous-ball" class="previous-ball" aria-label="이전 공 되불러오기" hidden></button>
         <div id="tube-drawer" class="tube-drawer" role="group" aria-label="물감 튜브"></div>
         <button id="undo-squeeze" class="round-button round-button--small" aria-label="덜어내기" hidden></button>
       </div>
 
       <div class="hud__bottom press-only">
-        <button id="new-clay" class="icon-button new-clay" aria-label="새 점토 (두 번 누르기)">
-          <svg class="new-clay__ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" /></svg>
-          <span class="new-clay__label" aria-hidden="true">한 번 더!</span>
-        </button>
         <button id="round-again" class="round-button round-button--big" aria-label="다시 동그랗게"></button>
       </div>
     </div>
@@ -59,7 +63,14 @@
           색 섞기: Mixbox © Secret Weapons, CC BY-NC 4.0<br />
           scrtwpns.com/mixbox
         </p>
-        <button id="parent-close" class="text-button">닫기</button>
+        <div class="parent-panel__actions">
+          <button id="parent-close" class="text-button">닫기</button>
+          <!-- 모두 지우기: 첫 탭은 확인 문구로 바뀌고, 3초 안에 다시 누르면 지금 공·이전 공·설정을 모두 지움 -->
+          <button id="clear-all" class="text-button text-button--danger">
+            <span class="clear-all__idle">모두 지우기</span>
+            <span class="clear-all__armed">한 번 더 누르면 지워요</span>
+          </button>
+        </div>
       </div>
     </div>
 

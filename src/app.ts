@@ -23,6 +23,7 @@ const HINT_IDLE_MS = 4000;
 const HINTS_PER_MODE = 3;
 const NEW_CLAY_CONFIRM_MS = 3000;
 const PARENT_HOLD_MS = 2000;
+const CLEAR_ALL_CONFIRM_MS = 3000;
 const SAVE_DEBOUNCE_MS = 400;
 
 const $ = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -70,6 +71,7 @@ export class App {
   private lastStirAt = 0;
   private newClayArmedTimer = 0;
   private parentHoldTimer = 0;
+  private clearAllArmedTimer = 0;
   private saveTimer = 0;
   private hintVisible = false;
 
@@ -209,7 +211,8 @@ export class App {
     for (const type of ['pointerup', 'pointercancel', 'pointerleave']) {
       parent.addEventListener(type, () => window.clearTimeout(this.parentHoldTimer));
     }
-    $('#parent-close').addEventListener('click', () => ($('#parent-panel').hidden = true));
+    $('#parent-close').addEventListener('click', () => this.closeParentPanel());
+    $('#clear-all').addEventListener('click', () => this.clearAllTapped());
 
     // 백그라운드로 갈 때 저장 (D6)
     document.addEventListener('visibilitychange', () => {
@@ -484,11 +487,42 @@ export class App {
     }
     window.clearTimeout(this.newClayArmedTimer);
     button.classList.remove('is-armed');
-    // 10A: 지금 공은 '이전 공'으로
-    this.store.moveCurrentToPrevious(this.currentPiece());
+    this.endSqueeze();
+    // 10A: 지금 공은 '이전 공'으로. 아무것도 안 한 흰 공이면 이전 공을 덮어쓰지 않는다
+    if (this.paint.getBlobs().length > 1 || this.clay.isDented()) {
+      this.store.moveCurrentToPrevious(this.currentPiece());
+    } else {
+      this.store.discardCurrent();
+    }
     this.resetPiece();
     this.updatePreviousBall();
     this.swing = { from: this.camera.position.clone(), to: this.cameraTarget(), startedAt: performance.now() };
+  }
+
+  private closeParentPanel(): void {
+    $('#parent-panel').hidden = true;
+    window.clearTimeout(this.clearAllArmedTimer);
+    $('#clear-all').classList.remove('is-armed');
+  }
+
+  /** 부모 화면 '모두 지우기': 첫 탭은 확인 문구, 3초 안에 다시 누르면 전부 지우고 새 흰 점토 */
+  private clearAllTapped(): void {
+    const button = $('#clear-all');
+    if (!button.classList.contains('is-armed')) {
+      button.classList.add('is-armed');
+      window.clearTimeout(this.clearAllArmedTimer);
+      this.clearAllArmedTimer = window.setTimeout(() => button.classList.remove('is-armed'), CLEAR_ALL_CONFIRM_MS);
+      return;
+    }
+    window.clearTimeout(this.saveTimer);
+    this.endSqueeze();
+    this.store.clearAll();
+    this.prefs = this.store.loadPrefs();
+    this.sound.setMuted(this.prefs.muted);
+    this.updateSoundIcon();
+    this.resetPiece();
+    this.updatePreviousBall();
+    this.closeParentPanel();
   }
 
   private swapPrevious(): void {

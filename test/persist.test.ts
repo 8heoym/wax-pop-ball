@@ -158,6 +158,32 @@ describe('설정 (7A, 8A)', () => {
   });
 });
 
+describe('모두 지우기', () => {
+  it('지금 공, 이전 공, 설정을 모두 지운다', () => {
+    const storage = new MemoryStorage();
+    const store = new PieceStore(storage);
+    store.moveCurrentToPrevious(makePiece('blue'));
+    store.saveCurrent(makePiece('red'));
+    store.savePrefs({ version: 1, muted: true, hintsShown: { mix: 3, press: 3 } });
+    store.clearAll();
+    expect(store.loadCurrent()).toBeNull();
+    expect(store.loadPrevious()).toBeNull();
+    expect(store.loadPrefs()).toEqual(DEFAULT_PREFS);
+    expect(storage.data.size).toBe(0);
+  });
+
+  it('다른 사이트 키는 건드리지 않는다', () => {
+    const storage = new MemoryStorage();
+    storage.setItem('other.app', 'keep');
+    new PieceStore(storage).clearAll();
+    expect(storage.getItem('other.app')).toBe('keep');
+  });
+
+  it('저장소가 없어도 예외 없이 동작', () => {
+    expect(() => new PieceStore(null).clearAll()).not.toThrow();
+  });
+});
+
 describe('저장소 실패에도 놀이는 계속된다', () => {
   it('용량 초과면 false를 돌려주고 예외를 던지지 않는다', () => {
     const store = new PieceStore(new FullStorage());

@@ -140,6 +140,13 @@ export class PieceStore {
     return previous;
   }
 
+  /** 부모 화면 '모두 지우기': 지금 공, 이전 공, 설정(소리 끔, 안내 횟수)을 모두 지운다 */
+  clearAll(): void {
+    this.write(KEY_CURRENT, null);
+    this.write(KEY_PREVIOUS, null);
+    this.write(KEY_PREFS, null);
+  }
+
   loadPrefs(): Prefs {
     return parsePrefs(this.read(KEY_PREFS));
   }

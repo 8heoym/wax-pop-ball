@@ -113,6 +113,16 @@ body.is-ready #stage {
   right: var(--safe-right);
 }
 
+.hud__bottom-left {
+  position: absolute;
+  left: var(--safe-left);
+  bottom: var(--safe-bottom);
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  z-index: 1;
+}
+
 .hud__bottom {
   position: absolute;
   left: var(--safe-left);
@@ -294,9 +304,6 @@ body.is-fully-mixed #done-button {
 
 /* 10A: 이전 공 동그라미 */
 .previous-ball {
-  position: absolute;
-  left: 0;
-  bottom: 8px;
   width: var(--size-touch-min);
   height: var(--size-touch-min);
   border-radius: 50%;
@@ -318,7 +325,6 @@ body.is-fully-mixed #done-button {
 /* ── 새 점토 두 번 누르기 확인 (5A) ─────────────────────────────── */
 .new-clay {
   position: relative;
-  margin-right: auto;
   opacity: 0.75;
   transform-origin: 0 100%;
 }
@@ -510,6 +516,34 @@ body.is-fully-mixed #done-button {
 
 .parent-panel__credit {
   font-size: 16px;
+}
+
+.parent-panel__actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.text-button--danger {
+  background: transparent;
+  color: var(--color-ink);
+  box-shadow: inset 0 0 0 3px var(--color-ink);
+}
+
+.text-button--danger .clear-all__armed,
+.text-button--danger.is-armed .clear-all__idle {
+  display: none;
+}
+
+.text-button--danger.is-armed .clear-all__armed {
+  display: inline;
+}
+
+.text-button--danger.is-armed {
+  background: #c8412b;
+  color: #fff;
+  box-shadow: none;
 }
 
 .text-button {
