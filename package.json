@@ -9,10 +9,12 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "start": "serve dist --single --no-clipboard --listen tcp://0.0.0.0:${PORT:-3000}"
   },
   "dependencies": {
     "mixbox": "^2.0.0",
+    "serve": "^14.2.6",
     "three": "^0.186.1"
   },
   "devDependencies": {
@@ -21,5 +23,8 @@
     "vite": "^8.3.4",
     "vite-plugin-pwa": "^2.0.0",
     "vitest": "^5.0.3"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }
