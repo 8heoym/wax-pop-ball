@@ -36,8 +36,12 @@ export const MAX_BLOBS = 8;
 export const MIN_SQUEEZE = 0.25;
 export const SQUEEZE_PER_SECOND = 1.0;
 export const MAX_SQUEEZE = 3;
-/** 이동 거리(화면 짧은 변 = 1) 12만큼 저으면 p가 0 → 1 (큰 원 약 6바퀴) */
-export const STIR_DISTANCE_FOR_FULL_MIX = 12;
+/**
+ * 이동 거리(화면 짧은 변 = 1) 8만큼 저으면 p가 0 → 1.
+ * 1A 배치에서 공 반지름은 짧은 변의 27.5%라, 공 위의 큰 원(반지름 약 0.2) 둘레가 약 1.3.
+ * "큰 원 약 6바퀴"(설계 문서)에 맞춰 8로 정함. 처음 값 12는 공보다 큰 원 기준이었다.
+ */
+export const STIR_DISTANCE_FOR_FULL_MIX = 8;
 const CLAY_AMOUNT = 1;
 
 /** 짜고 있는 시간(초) → 양. 짧은 탭도 최소 0.25, 최대 3 (D7) */

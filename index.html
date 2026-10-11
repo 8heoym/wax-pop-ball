@@ -15,8 +15,57 @@
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
     <title>왁뿌볼 공방</title>
   </head>
-  <body>
+  <body data-mode="mix">
     <canvas id="stage" role="img" aria-label="왁뿌볼 점토"></canvas>
+
+    <!-- 1A 화면 배치: 위 왼쪽(부모, 작업대로) / 위 오른쪽(소리, 완성, 색 메달) / 아래(튜브 서랍 또는 누르기 버튼) -->
+    <div id="hud">
+      <div class="hud__top-left">
+        <!-- 17A: 흐린 톱니, 2초 길게 눌러야 부모 화면 -->
+        <button id="parent-button" class="icon-button icon-button--faint" aria-label="부모 설정 (2초 길게 누르기)"></button>
+        <button id="to-workbench" class="icon-button press-only" aria-label="작업대로"></button>
+      </div>
+      <div class="hud__top-right">
+        <button id="sound-toggle" class="icon-button" aria-label="소리" aria-pressed="false"></button>
+        <button id="done-button" class="round-button round-button--accent mix-only" aria-label="완성"></button>
+        <div id="medal" class="medal press-only" role="img" aria-label="내가 만든 색"></div>
+      </div>
+
+      <div class="hud__bottom mix-only">
+        <button id="previous-ball" class="previous-ball" aria-label="이전 공 되불러오기" hidden></button>
+        <div id="tube-drawer" class="tube-drawer" role="group" aria-label="물감 튜브"></div>
+        <button id="undo-squeeze" class="round-button round-button--small" aria-label="덜어내기" hidden></button>
+      </div>
+
+      <div class="hud__bottom press-only">
+        <button id="new-clay" class="icon-button new-clay" aria-label="새 점토 (두 번 누르기)">
+          <svg class="new-clay__ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" /></svg>
+          <span class="new-clay__label" aria-hidden="true">한 번 더!</span>
+        </button>
+        <button id="round-again" class="round-button round-button--big" aria-label="다시 동그랗게"></button>
+      </div>
+    </div>
+
+    <!-- 7A: 멈추면 나타나는 유령 손가락 -->
+    <div id="ghost-finger" class="ghost-finger" aria-hidden="true" hidden></div>
+    <div id="sparkles" class="sparkles" aria-hidden="true"></div>
+
+    <!-- 부모용 정보 화면 (D5 버전, D8 Mixbox 출처) -->
+    <div id="parent-panel" class="parent-panel" role="dialog" aria-modal="true" aria-labelledby="parent-title" hidden>
+      <div class="parent-panel__card">
+        <h2 id="parent-title">왁뿌볼 공방</h2>
+        <p>버전 <span id="app-version"></span></p>
+        <p class="parent-panel__credit">
+          색 섞기: Mixbox © Secret Weapons, CC BY-NC 4.0<br />
+          scrtwpns.com/mixbox
+        </p>
+        <button id="parent-close" class="text-button">닫기</button>
+      </div>
+    </div>
+
+    <!-- 3A: 글자 없는 숨 쉬는 점토 (로딩, 3D 화면 복구 중) -->
+    <div id="loader" class="loader" aria-hidden="true"><div class="loader__clay"></div></div>
+
     <!-- 1A: 세로로 들면 글자 없이 '가로로 돌려주세요' 그림만 -->
     <div id="rotate-hint" aria-hidden="true">
       <div class="rotate-hint__device"></div>

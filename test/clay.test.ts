@@ -177,6 +177,19 @@ describe('다시 동그랗게', () => {
   });
 });
 
+describe('새 점토', () => {
+  it('reset은 누르는 중이어도 즉시 원래 구로 되돌린다', () => {
+    const clay = newClay();
+    hold(clay, TOP, 2);
+    clay.beginPress(TOP);
+    clay.updatePress(1);
+    clay.reset();
+    expect(clay.isDented()).toBe(false);
+    expect(clay.updatePress(2)).toBe(false);
+    expect(clay.isDented()).toBe(false);
+  });
+});
+
 describe('저장 (D6)', () => {
   it('반지름 왕복 후 같은 모양', () => {
     const clay = newClay();

@@ -139,6 +139,13 @@ export class ClayDeformer {
     return indices.length > 0;
   }
 
+  /** 새 점토: 즉시 원래 구로 (애니메이션 없음) */
+  reset(): void {
+    this.endPress();
+    this.restoreFrom = null;
+    this.radii.fill(CLAY_RADIUS);
+  }
+
   isDented(): boolean {
     return this.radii.some((r) => r !== CLAY_RADIUS);
   }

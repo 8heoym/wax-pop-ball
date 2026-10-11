@@ -12,9 +12,9 @@ import { areaFraction, latentToRgb, type Blob, type Latent } from './paint';
 import { createNoise3 } from './noise';
 
 /** 영역 경계를 부드럽게 섞는 폭 (점수 단위) */
-const EDGE_SOFTNESS = 0.03;
+const EDGE_SOFTNESS = 0.07;
 const LOW_FREQUENCY = 1.4;
-const HIGH_FREQUENCY = 4.2;
+const HIGH_FREQUENCY = 2.6;
 const WARP = 0.55;
 
 interface BlobField {

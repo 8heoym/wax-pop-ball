@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { ClayDeformer, createClayGeometry } from '../src/clay';
 import { MarbleField, srgbToLinear } from '../src/marble';
 import { createNoise3 } from '../src/noise';
-import { PaintState, areaFraction, type Vec3 } from '../src/paint';
+import { PaintState, STIR_DISTANCE_FOR_FULL_MIX, areaFraction, type Vec3 } from '../src/paint';
 import type { TubeId } from '../src/palette';
 
 let directions: Float32Array;
@@ -89,7 +89,7 @@ describe('마블 무늬', () => {
     const state = new PaintState();
     squeeze(state, 'blue', 2);
     squeeze(state, 'yellow', 2, [1, 0, 0]);
-    state.stir(12);
+    state.stir(STIR_DISTANCE_FOR_FULL_MIX);
     const c = colors(new MarbleField(directions), state);
     const final = state.finalRgb();
     for (let i = 0; i < count; i++) expect(dist(rgbAt(c, i), final)).toBeLessThan(0.02);

@@ -5,10 +5,18 @@
   --color-ink: #3b2a1e;
   --color-accent: #ff7a59;
   --color-ui-surface: #fff8ee;
+  --font-display: 'Jua', 'Apple SD Gothic Neo', 'Nanum Gothic', sans-serif;
   --size-touch-min: 64px;
+  --size-tube-w: 88px;
+  --size-tube-h: 120px;
+  --gap-tube: 24px;
   --motion-fast: 0.2s;
   --motion-mid: 0.5s;
   --motion-slow: 0.8s;
+  --safe-top: max(16px, env(safe-area-inset-top));
+  --safe-right: max(20px, env(safe-area-inset-right));
+  --safe-bottom: max(16px, env(safe-area-inset-bottom));
+  --safe-left: max(20px, env(safe-area-inset-left));
 }
 
 html,
@@ -19,12 +27,38 @@ body {
   overscroll-behavior: none;
   background: var(--color-wood);
   color: var(--color-ink);
-  /* Safari 기본 동작 끄기: 길게 누르기 선택/콜아웃, 더블탭 확대 */
+  font-family: var(--font-display);
+  /* Safari 기본 동작 끄기: 길게 누르기 선택/콜아웃, 더블탭 확대 (R15) */
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: transparent;
+}
+
+/* hidden 속성이 display 지정(.parent-panel, .round-button 등)에 덮이지 않게.
+   이게 없으면 숨긴 부모 화면이 투명하게 화면 전체 터치를 가로챈다 */
+[hidden] {
+  display: none !important;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 4px solid var(--color-accent);
+  outline-offset: 4px;
 }
 
 #stage {
@@ -34,8 +68,488 @@ body {
   width: 100vw;
   height: 100dvh;
   touch-action: none;
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
 }
 
+body.is-ready #stage {
+  opacity: 1;
+}
+
+/* ── HUD 배치 (1A) ─────────────────────────────── */
+#hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+#hud button,
+#hud .medal {
+  pointer-events: auto;
+}
+
+.hud__top-left,
+.hud__top-right {
+  position: absolute;
+  top: var(--safe-top);
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.hud__top-left {
+  left: var(--safe-left);
+}
+
+.hud__top-right {
+  right: var(--safe-right);
+}
+
+.hud__bottom {
+  position: absolute;
+  left: var(--safe-left);
+  right: var(--safe-right);
+  bottom: var(--safe-bottom);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: var(--gap-tube);
+}
+
+body[data-mode='mix'] .press-only,
+body[data-mode='press'] .mix-only {
+  display: none !important;
+}
+
+/* ── 버튼 ─────────────────────────────── */
+.icon-button,
+.round-button {
+  min-width: var(--size-touch-min);
+  min-height: var(--size-touch-min);
+  display: grid;
+  place-items: center;
+  border: none;
+  padding: 0;
+  background: var(--color-ui-surface);
+  border-radius: 24px;
+  box-shadow: 0 4px 10px rgb(91 60 28 / 0.18);
+  transition: transform var(--motion-fast) ease-out;
+}
+
+.icon-button svg,
+.round-button svg {
+  width: 36px;
+  height: 36px;
+}
+
+.icon-button:active,
+.round-button:active {
+  transform: scale(0.94);
+}
+
+.icon-button--faint {
+  opacity: 0.3;
+  background: transparent;
+  box-shadow: none;
+}
+
+.round-button {
+  border-radius: 50%;
+}
+
+#done-button {
+  width: 96px;
+  height: 96px;
+}
+
+#done-button svg {
+  width: 52px;
+  height: 52px;
+}
+
+.round-button--accent {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.round-button--big {
+  width: 112px;
+  height: 112px;
+  margin-left: auto;
+}
+
+.round-button--big svg {
+  width: 60px;
+  height: 60px;
+}
+
+.round-button--small {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+}
+
+/* 6A: 다 섞이면 완성 버튼이 2초마다 두근 */
+body.is-fully-mixed #done-button {
+  animation: heartbeat 2s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%,
+  70%,
+  100% {
+    transform: scale(1);
+  }
+  80% {
+    transform: scale(1.12);
+  }
+  90% {
+    transform: scale(0.98);
+  }
+}
+
+/* ── 튜브 서랍 (15A) ─────────────────────────────── */
+.tube-drawer {
+  display: flex;
+  gap: var(--gap-tube);
+  padding: 12px 24px 0;
+}
+
+.tube {
+  position: relative;
+  width: var(--size-tube-w);
+  height: var(--size-tube-h);
+  border: none;
+  padding: 0;
+  background: none;
+  transform-origin: 50% 100%;
+  transition: transform var(--motion-fast) ease-out;
+}
+
+.tube__body {
+  position: absolute;
+  inset: 34px 10px 0;
+  border-radius: 14px 14px 22px 22px;
+  background: var(--color-ui-surface);
+  box-shadow: 0 4px 10px rgb(91 60 28 / 0.2);
+}
+
+.tube__label {
+  position: absolute;
+  left: 50%;
+  top: 56%;
+  width: 46px;
+  height: 46px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--tube-color);
+  box-shadow: inset 0 0 0 3px rgb(59 42 30 / 0.25);
+}
+
+.tube[data-tube='white'] .tube__label {
+  box-shadow: inset 0 0 0 4px var(--color-ink);
+}
+
+.tube__cap {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 44px;
+  height: 44px;
+  transform: translateX(-50%);
+  fill: var(--tube-color);
+  stroke: var(--color-ink);
+  stroke-width: 3;
+}
+
+/* 4A: 짜는 동안 튜브가 눈에 보이게 찌그러짐, 최대면 부르르 */
+.tube.is-squeezing {
+  transform: scaleY(0.82) scaleX(1.08);
+}
+
+.tube.is-maxed {
+  animation: wobble 0.25s linear infinite;
+}
+
+@keyframes wobble {
+  0%,
+  100% {
+    transform: scaleY(0.82) scaleX(1.08) rotate(0deg);
+  }
+  25% {
+    transform: scaleY(0.82) scaleX(1.08) rotate(-4deg);
+  }
+  75% {
+    transform: scaleY(0.82) scaleX(1.08) rotate(4deg);
+  }
+}
+
+/* 10A: 이전 공 동그라미 */
+.previous-ball {
+  position: absolute;
+  left: 0;
+  bottom: 8px;
+  width: var(--size-touch-min);
+  height: var(--size-touch-min);
+  border-radius: 50%;
+  border: 4px solid var(--color-ui-surface);
+  background: var(--previous-color, #fff);
+  box-shadow: 0 4px 10px rgb(91 60 28 / 0.2);
+}
+
+/* 색 메달 (9A) */
+.medal {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--medal-color, #fff);
+  border: 4px solid var(--color-ui-surface);
+  box-shadow: 0 4px 10px rgb(91 60 28 / 0.2);
+}
+
+/* ── 새 점토 두 번 누르기 확인 (5A) ─────────────────────────────── */
+.new-clay {
+  position: relative;
+  margin-right: auto;
+  opacity: 0.75;
+  transform-origin: 0 100%;
+}
+
+.new-clay__ring {
+  position: absolute;
+  inset: -6px;
+  width: calc(100% + 12px) !important;
+  height: calc(100% + 12px) !important;
+  transform: rotate(-90deg);
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 6;
+  stroke-dasharray: 289;
+  stroke-dashoffset: 289;
+  visibility: hidden;
+}
+
+.new-clay__label {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 14px);
+  white-space: nowrap;
+  font-size: 20px;
+  visibility: hidden;
+}
+
+.new-clay.is-armed {
+  opacity: 1;
+  animation: armed-shake 0.4s ease-out;
+  transform: scale(1.2);
+}
+
+.new-clay.is-armed .new-clay__ring {
+  visibility: visible;
+  animation: ring-drain 3s linear forwards;
+}
+
+.new-clay.is-armed .new-clay__label {
+  visibility: visible;
+}
+
+@keyframes armed-shake {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.2) rotate(-8deg);
+  }
+  60% {
+    transform: scale(1.2) rotate(8deg);
+  }
+  100% {
+    transform: scale(1.2) rotate(0);
+  }
+}
+
+@keyframes ring-drain {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: 289;
+  }
+}
+
+/* ── 안내 손가락 (7A) ─────────────────────────────── */
+.ghost-finger {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.65);
+  box-shadow: 0 0 0 6px rgb(255 255 255 / 0.3);
+  pointer-events: none;
+}
+
+.ghost-finger[data-hint='tap'] {
+  animation: hint-tap 1.4s ease-in-out infinite;
+}
+
+.ghost-finger[data-hint='rub'] {
+  animation: hint-rub 2s linear infinite;
+}
+
+.ghost-finger[data-hint='drag'] {
+  animation: hint-drag 2s ease-in-out infinite;
+}
+
+.ghost-finger[data-hint='hold'] {
+  animation: hint-hold 2s ease-in-out infinite;
+}
+
+@keyframes hint-tap {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(0.75);
+    opacity: 1;
+  }
+}
+
+@keyframes hint-rub {
+  from {
+    transform: rotate(0deg) translateX(70px) rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg) translateX(70px) rotate(-360deg);
+  }
+}
+
+@keyframes hint-drag {
+  0%,
+  100% {
+    transform: translateX(-90px);
+  }
+  50% {
+    transform: translateX(90px);
+  }
+}
+
+@keyframes hint-hold {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  30%,
+  80% {
+    transform: scale(0.7);
+  }
+}
+
+/* ── 완성 반짝이 (9A) ─────────────────────────────── */
+.sparkles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sparkle {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  background: #fff;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  animation: sparkle var(--motion-slow) ease-out forwards;
+}
+
+@keyframes sparkle {
+  from {
+    transform: translate(0, 0) scale(0.4);
+    opacity: 1;
+  }
+  to {
+    transform: translate(var(--dx), var(--dy)) scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* ── 부모 화면 ─────────────────────────────── */
+.parent-panel {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(59 42 30 / 0.35);
+}
+
+.parent-panel__card {
+  min-width: 320px;
+  padding: 28px 32px;
+  border-radius: 24px;
+  background: var(--color-ui-surface);
+  box-shadow: 0 8px 24px rgb(59 42 30 / 0.3);
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.parent-panel__card h2 {
+  margin: 0 0 12px;
+}
+
+.parent-panel__credit {
+  font-size: 16px;
+}
+
+.text-button {
+  min-height: var(--size-touch-min);
+  padding: 0 28px;
+  border: none;
+  border-radius: 24px;
+  background: var(--color-accent);
+  color: #fff;
+}
+
+/* ── 숨 쉬는 점토 (3A) ─────────────────────────────── */
+.loader {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--color-wood);
+  transition: opacity 0.3s ease-out;
+}
+
+body.is-ready .loader {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loader__clay {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: #fbf9f5;
+  box-shadow:
+    inset -14px -18px 0 rgb(201 165 116 / 0.35),
+    0 18px 0 -6px rgb(201 165 116 / 0.6);
+  animation: breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08, 0.95);
+  }
+}
+
+/* ── 세로 안내 (1A) ─────────────────────────────── */
 #rotate-hint {
   position: fixed;
   inset: 0;
@@ -67,5 +581,14 @@ body {
 @media (orientation: portrait) {
   #rotate-hint {
     display: flex;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

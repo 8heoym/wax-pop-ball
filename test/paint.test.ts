@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   MAX_BLOBS,
+  STIR_DISTANCE_FOR_FULL_MIX as FULL,
   PaintState,
   areaFraction,
   parsePaintSnapshot,
@@ -63,11 +64,11 @@ describe('새 점토', () => {
   });
 });
 
-describe('젓기 (p += 거리/12)', () => {
+describe('젓기 (p += 거리/FULL)', () => {
   it('p는 0~1로 오르고 되돌아가지 않는다', () => {
     const state = new PaintState();
     squeeze(state, 'blue', 2);
-    state.stir(6);
+    state.stir(FULL / 2);
     expect(paintBlobs(state)[0].p).toBeCloseTo(0.5);
     state.stir(0);
     state.stir(-3);
@@ -79,7 +80,7 @@ describe('젓기 (p += 거리/12)', () => {
   it('새로 짠 덩어리는 p=0에서 시작하고 기존 p는 그대로', () => {
     const state = new PaintState();
     squeeze(state, 'blue', 2);
-    state.stir(6);
+    state.stir(FULL / 2);
     squeeze(state, 'yellow', 2);
     const [blue, yellow] = paintBlobs(state);
     expect(blue.p).toBeCloseTo(0.5);
@@ -91,7 +92,7 @@ describe('젓기 (p += 거리/12)', () => {
     expect(state.stir(20)).toBe(false); // 물감 없음
     squeeze(state, 'blue', 2);
     squeeze(state, 'yellow', 2);
-    expect(state.stir(11)).toBe(false);
+    expect(state.stir(FULL - 1)).toBe(false);
     expect(state.stir(1)).toBe(true);
     expect(state.stir(5)).toBe(false);
     expect(state.isFullyMixed()).toBe(true);
@@ -128,7 +129,7 @@ describe('덩어리 최대 8개', () => {
   it('없으면 흰 바탕을 뺀 가장 많이 섞인 두 덩어리를 합치고, 최종 색은 그대로', () => {
     const state = new PaintState();
     fillToMax(state);
-    state.stir(3); // 모든 물감 p=0.25 → 동점이면 오래된 두 덩어리(red, pink)
+    state.stir(FULL / 4); // 모든 물감 p=0.25 → 동점이면 오래된 두 덩어리(red, pink)
     const beforeLatent = state.finalLatent();
     const clayBefore = state.getBlobs()[0];
 
@@ -154,7 +155,7 @@ describe('덩어리 최대 8개', () => {
     const state = new PaintState();
     squeeze(state, 'red', 1);
     squeeze(state, 'pink', 1);
-    state.stir(6); // red, pink만 p=0.5
+    state.stir(FULL / 2); // red, pink만 p=0.5
     for (const tube of ['yellow', 'blue', 'black', 'white', 'red'] as TubeId[]) squeeze(state, tube, 1);
     expect(state.getBlobs()).toHaveLength(MAX_BLOBS);
 
@@ -237,7 +238,7 @@ describe('저장 형식', () => {
     squeeze(state, 'blue', 2);
     const snapshot = state.toSnapshot();
     const restored = new PaintState(snapshot);
-    restored.stir(12);
+    restored.stir(FULL);
     expect(snapshot.blobs[1].p).toBe(0);
   });
 
