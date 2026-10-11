@@ -2,8 +2,8 @@
 // 물감(paint.ts), 누르기(clay.ts), 제스처(gestures.ts)는 T2~T4에서 추가.
 import './styles.css';
 import * as THREE from 'three';
-import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { registerSW } from 'virtual:pwa-register';
+import { createClayGeometry } from './clay';
 
 registerSW({ immediate: true });
 
@@ -32,16 +32,6 @@ scene.add(key);
 const rim = new THREE.DirectionalLight(0xffe2c4, 0.8);
 rim.position.set(2, 1.5, -4);
 scene.add(rim);
-
-// D3: 이음매 없는 축구공식 구. UV/법선을 지우고 꼭짓점을 합쳐야 법선 재계산 시 줄이 생기지 않음
-function createClayGeometry(): THREE.BufferGeometry {
-  let geometry: THREE.BufferGeometry = new THREE.IcosahedronGeometry(1, 32);
-  geometry.deleteAttribute('normal');
-  geometry.deleteAttribute('uv');
-  geometry = mergeVertices(geometry);
-  geometry.computeVertexNormals();
-  return geometry;
-}
 
 const clay = new THREE.Mesh(
   createClayGeometry(),
