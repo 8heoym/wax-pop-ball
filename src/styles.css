@@ -1,3 +1,10 @@
+/* 한글 둥근 폰트: 화면에 보이는 글자만 서브셋 (scripts/subset-font.sh, R11). 실패하면 아래 대체 스택 */
+@font-face {
+  font-family: 'Jua';
+  src: url('./assets/jua-subset.woff2') format('woff2');
+  font-display: swap;
+}
+
 /* 디자인 토큰 (Design review 13A) */
 :root {
   --color-wood: #e9cfa6;
@@ -25,7 +32,8 @@ body {
   height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
-  background: var(--color-wood);
+  background: var(--color-wood) var(--wood-texture, none) repeat;
+  background-size: 512px 512px;
   color: var(--color-ink);
   font-family: var(--font-display);
   /* Safari 기본 동작 끄기: 길게 누르기 선택/콜아웃, 더블탭 확대 (R15) */

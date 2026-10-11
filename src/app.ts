@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { SoundBoard } from './audio';
 import { ClayDeformer, RESTORE_SECONDS, createClayGeometry } from './clay';
+import { createShadowCanvas, createWoodTexture } from './wood';
 import { GestureRecognizer, type GestureEvent } from './gestures';
 import { CAP_SHAPES, ICONS } from './icons';
 import { MarbleField, srgbToLinear } from './marble';
@@ -55,7 +56,10 @@ export class App {
   private marbleDirty = true;
   private lastMarbleUpdate = -Infinity;
   private needsRender = true;
+  /** 화면이 바뀐 마지막 시각 (렌더 루프 잠들기 판단) */
   private lastActivity = 0;
+  /** 사람이 마지막으로 만진 시각 (안내 손가락 판단). 자동 회전은 입력이 아니다 */
+  private lastInputAt = 0;
   private sleeping = false;
   private lastFrame = 0;
   private swing: CameraSwing | null = null;
@@ -71,9 +75,11 @@ export class App {
 
   constructor(private readonly canvas: HTMLCanvasElement) {
     // WebGL을 만들 수 없으면 여기서 예외: main.ts가 숨 쉬는 점토를 계속 보여준다 (3A)
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // D10
-    this.renderer.setClearColor(0xe9cfa6);
+    // 배경은 투명: 뒤의 나무 작업대(CSS)가 보인다 (12A)
+    this.renderer.setClearColor(0x000000, 0);
+    document.body.style.setProperty('--wood-texture', `url(${createWoodTexture()})`);
 
     this.prefs = this.store.loadPrefs();
     this.sound = new SoundBoard(this.prefs.muted);
@@ -100,6 +106,15 @@ export class App {
     this.ball.add(this.mesh);
     this.scene.add(this.ball);
 
+    // 공 아래 접지 그림자: 공과 함께 돌지 않도록 장면에 직접 둔다
+    const shadow = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.6, 2.6),
+      new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(createShadowCanvas()), transparent: true, depthWrite: false }),
+    );
+    shadow.rotation.x = -Math.PI / 2;
+    shadow.position.y = -1.02;
+    this.scene.add(shadow);
+
     this.gestures = new GestureRecognizer({
       isOnBall: (x, y) => this.isOnBall(x, y),
       shortSide: () => Math.min(window.innerWidth, window.innerHeight),
@@ -111,6 +126,7 @@ export class App {
     this.updatePreviousBall();
     this.resize();
     this.lastActivity = performance.now();
+    this.lastInputAt = this.lastActivity;
     this.renderer.setAnimationLoop((t) => this.frame(t));
     $('#app-version').textContent = __APP_VERSION__;
   }
@@ -151,6 +167,7 @@ export class App {
       this.handleGestures(this.gestures.pointerDown(e.pointerId, e.clientX, e.clientY, e.timeStamp));
     });
     c.addEventListener('pointermove', (e) => {
+      if (e.buttons) this.lastInputAt = performance.now();
       this.handleGestures(this.gestures.pointerMove(e.pointerId, e.clientX, e.clientY, e.timeStamp));
     });
     const up = (e: PointerEvent) => {
@@ -328,6 +345,7 @@ export class App {
     this.sound.squishUpdate(amount);
     this.squeezing.element.classList.toggle('is-maxed', this.paint.isSqueezeMaxed(held));
     this.marbleDirty = true;
+    this.lastInputAt = now;
     this.noteActivity(now);
   }
 
@@ -546,7 +564,8 @@ export class App {
 
   private noteInput(): void {
     this.hideHint();
-    this.noteActivity(performance.now());
+    this.lastInputAt = performance.now();
+    this.noteActivity(this.lastInputAt);
     this.wake();
   }
 
@@ -557,7 +576,7 @@ export class App {
   }
 
   private maybeShowHint(now: number): void {
-    if (this.hintVisible || now - this.lastActivity < HINT_IDLE_MS || this.squeezing) return;
+    if (this.hintVisible || now - this.lastInputAt < HINT_IDLE_MS || this.squeezing || this.swing) return;
     if (!$('#parent-panel').hidden) return;
     const shown = this.prefs.hintsShown[this.mode];
     if (shown >= HINTS_PER_MODE) return;
@@ -687,7 +706,7 @@ export class App {
       this.renderer.setAnimationLoop(null);
       // 잠든 동안에도 안내 손가락(7A)이 나올 수 있게 깨울 시각을 예약
       if (this.prefs.hintsShown.press < HINTS_PER_MODE && !this.hintVisible) {
-        window.setTimeout(() => this.wake(), Math.max(0, this.lastActivity + HINT_IDLE_MS - now) + 50);
+        window.setTimeout(() => this.wake(), Math.max(0, this.lastInputAt + HINT_IDLE_MS - now) + 50);
       }
     }
   }
