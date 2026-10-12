@@ -28,20 +28,29 @@
       <div class="hud__top-right">
         <button id="sound-toggle" class="icon-button" aria-label="소리" aria-pressed="false"></button>
         <button id="done-button" class="round-button round-button--accent mix-only" aria-label="완성"></button>
-        <div id="medal" class="medal press-only" role="img" aria-label="내가 만든 색"></div>
+        <!-- 섞기 모드: 저으면 될 색 미리보기 (물감을 짜면 나타남) / 누르기 모드: 내가 만든 색 메달 -->
+        <div id="medal" class="medal" role="img" aria-label="내가 만든 색">
+          <span class="medal__caption mix-only" aria-hidden="true">완성하면</span>
+        </div>
       </div>
 
       <!-- 왼쪽 아래: 새 점토는 두 모드 모두, 이전 공은 섞기 모드만 -->
       <div class="hud__bottom-left">
-        <button id="new-clay" class="icon-button new-clay" aria-label="새 점토 (두 번 누르기)">
+        <!-- 처음부터: 두 번 눌러야 흰 점토. 지금 공은 '이전 공'으로 보관돼 되돌릴 수 있다 -->
+        <button id="new-clay" class="icon-button new-clay" aria-label="처음부터 (두 번 누르기)">
           <svg class="new-clay__ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" /></svg>
+          <span class="new-clay__text" aria-hidden="true">처음부터</span>
           <span class="new-clay__label" aria-hidden="true">한 번 더!</span>
         </button>
         <button id="previous-ball" class="previous-ball mix-only" aria-label="이전 공 되불러오기" hidden></button>
       </div>
 
       <div class="hud__bottom mix-only">
-        <div id="tube-drawer" class="tube-drawer" role="group" aria-label="물감 튜브"></div>
+        <div class="tube-shelf">
+          <!-- 물감 묶음 탭 (기본/파스텔/진한색): 한 번에 튜브 6개만 보여 고르기 쉽게 -->
+          <div id="tube-tabs" class="tube-tabs" role="tablist" aria-label="물감 묶음"></div>
+          <div id="tube-drawer" class="tube-drawer" role="group" aria-label="물감 튜브"></div>
+        </div>
         <button id="undo-squeeze" class="round-button round-button--small" aria-label="덜어내기" hidden></button>
       </div>
 

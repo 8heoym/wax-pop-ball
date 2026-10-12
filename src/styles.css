@@ -14,9 +14,9 @@
   --color-ui-surface: #fff8ee;
   --font-display: 'Jua', 'Apple SD Gothic Neo', 'Nanum Gothic', sans-serif;
   --size-touch-min: 64px;
-  --size-tube-w: 88px;
-  --size-tube-h: 120px;
-  --gap-tube: 24px;
+  --size-tube-w: 92px;
+  --size-tube-h: 128px;
+  --gap-tube: 14px;
   --motion-fast: 0.2s;
   --motion-mid: 0.5s;
   --motion-slow: 0.8s;
@@ -227,10 +227,81 @@ body.is-fully-mixed #done-button {
 }
 
 /* ── 튜브 서랍 (15A) ─────────────────────────────── */
+.tube-shelf {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 물감 묶음 탭: 고른 탭은 꽉 찬 색, 나머지는 반투명 */
+.tube-tabs {
+  display: flex;
+  gap: 10px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgb(255 248 238 / 0.55);
+}
+
+.tube-tab {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 20px 0 14px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 20px;
+  transition:
+    background var(--motion-fast) ease-out,
+    transform var(--motion-fast) ease-out;
+}
+
+.tube-tab:active {
+  transform: scale(0.94);
+}
+
+.tube-tab.is-selected {
+  background: var(--color-ui-surface);
+  box-shadow: 0 4px 10px rgb(91 60 28 / 0.18);
+}
+
+.tube-tab__dots {
+  display: flex;
+}
+
+.tube-tab__dot {
+  width: 18px;
+  height: 18px;
+  margin-left: -5px;
+  border-radius: 50%;
+  background: var(--tube-color);
+  box-shadow: 0 0 0 2px var(--color-ui-surface);
+}
+
+.tube-tab__dot:first-child {
+  margin-left: 0;
+}
+
 .tube-drawer {
   display: flex;
   gap: var(--gap-tube);
-  padding: 12px 24px 0;
+  padding: 0 12px;
+}
+
+/* 탭을 바꾸면 튜브가 왼쪽부터 하나씩 톡톡 올라온다 */
+.tube-drawer.is-switching .tube {
+  animation: tube-pop 0.32s ease-out backwards;
+  animation-delay: calc(var(--i) * 40ms);
+}
+
+@keyframes tube-pop {
+  from {
+    transform: translateY(24px) scale(0.85);
+    opacity: 0;
+  }
 }
 
 .tube {
@@ -246,7 +317,7 @@ body.is-fully-mixed #done-button {
 
 .tube__body {
   position: absolute;
-  inset: 34px 10px 0;
+  inset: 34px 6px 0;
   border-radius: 14px 14px 22px 22px;
   background: var(--color-ui-surface);
   box-shadow: 0 4px 10px rgb(91 60 28 / 0.2);
@@ -255,13 +326,25 @@ body.is-fully-mixed #done-button {
 .tube__label {
   position: absolute;
   left: 50%;
-  top: 56%;
-  width: 46px;
-  height: 46px;
+  top: 60px;
+  width: 42px;
+  height: 42px;
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background: var(--tube-color);
   box-shadow: inset 0 0 0 3px rgb(59 42 30 / 0.25);
+}
+
+.tube__name {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 9px;
+  font-size: 16px;
+  line-height: 1;
+  letter-spacing: -0.5px;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .tube[data-tube='white'] .tube__label {
@@ -314,19 +397,52 @@ body.is-fully-mixed #done-button {
 
 /* 색 메달 (9A) */
 .medal {
+  position: relative;
   width: 48px;
   height: 48px;
   border-radius: 50%;
   background: var(--medal-color, #fff);
   border: 4px solid var(--color-ui-surface);
   box-shadow: 0 4px 10px rgb(91 60 28 / 0.2);
+  transition: background var(--motion-fast) linear;
+}
+
+/* 섞기 모드: 완성 버튼 왼쪽에 '완성하면 이 색' 미리보기. 짜는 동안 실시간으로 바뀐다 */
+body[data-mode='mix'] #done-button {
+  order: 1;
+}
+
+body[data-mode='mix'] .medal {
+  width: 64px;
+  height: 64px;
+}
+
+.medal__caption {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 16px;
 }
 
 /* ── 새 점토 두 번 누르기 확인 (5A) ─────────────────────────────── */
 .new-clay {
   position: relative;
-  opacity: 0.75;
+  width: 88px;
+  height: 88px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
   transform-origin: 0 100%;
+}
+
+.new-clay__text {
+  font-size: 17px;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .new-clay__ring {
@@ -353,7 +469,6 @@ body.is-fully-mixed #done-button {
 }
 
 .new-clay.is-armed {
-  opacity: 1;
   animation: armed-shake 0.4s ease-out;
   transform: scale(1.2);
 }

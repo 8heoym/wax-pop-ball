@@ -5,10 +5,10 @@ import { SoundBoard } from './audio';
 import { ClayDeformer, RESTORE_SECONDS, createClayGeometry } from './clay';
 import { createShadowCanvas, createWoodTexture } from './wood';
 import { GestureRecognizer, type GestureEvent } from './gestures';
-import { CAP_SHAPES, ICONS } from './icons';
+import { CAP_SHAPES, DEFAULT_CAP, ICONS } from './icons';
 import { MarbleField, srgbToLinear } from './marble';
 import { PaintState, type Vec3 } from './paint';
-import { TUBES, TUBE_ORDER, type TubeId } from './palette';
+import { TUBES, TUBE_GROUPS, TUBE_NAMES, type TubeGroup, type TubeId } from './palette';
 import { PieceStore, type Piece, type PieceMode, type Prefs } from './persist';
 
 const BALL_SCREEN_FRACTION = 0.55;
@@ -16,6 +16,8 @@ const CAMERA_DISTANCE = 4.4;
 const CAMERA_MIX = new THREE.Vector3(0, 2.4, 3.7).setLength(CAMERA_DISTANCE);
 const CAMERA_PRESS = new THREE.Vector3(0, 0.5, 4.4).setLength(CAMERA_DISTANCE);
 const CAMERA_SWING_SECONDS = 0.8;
+/** 섞기 모드에서 공을 위로 올리는 화면 픽셀. 아래 물감 묶음 탭에 공 아랫부분이 가리지 않게 */
+const MIX_VIEW_SHIFT_PX = 48;
 const AUTO_ROTATE_RADIANS_PER_SECOND = THREE.MathUtils.degToRad(6);
 const MARBLE_UPDATE_INTERVAL_MS = 100;
 const IDLE_SLEEP_MS = 1000;
@@ -53,6 +55,8 @@ export class App {
   private paint = new PaintState();
   private mode: PieceMode = 'mix';
   private zoom = 1;
+  /** 지금 화면을 위로 민 픽셀. 모드가 바뀌면 목표값으로 부드럽게 따라간다 */
+  private viewShift = 0;
 
   private marbleDirty = true;
   private lastMarbleUpdate = -Infinity;
@@ -144,16 +148,52 @@ export class App {
     $('#new-clay').insertAdjacentHTML('afterbegin', ICONS.newClay);
     this.updateSoundIcon();
 
+    const tabs = $('#tube-tabs');
     const drawer = $('#tube-drawer');
-    for (const tube of TUBE_ORDER) {
-      const button = document.createElement('button');
-      button.className = 'tube';
-      button.dataset.tube = tube;
-      button.setAttribute('aria-label', `${TUBE_NAMES[tube]} 물감`);
-      button.style.setProperty('--tube-color', `rgb(${TUBES[tube].join(',')})`);
-      button.innerHTML = `<span class="tube__body"></span><span class="tube__label"></span>
-        <svg class="tube__cap" viewBox="0 0 48 48" aria-hidden="true">${CAP_SHAPES[tube]}</svg>`;
-      drawer.append(button);
+    for (const group of TUBE_GROUPS) {
+      const tab = document.createElement('button');
+      tab.className = 'tube-tab';
+      tab.dataset.group = group.id;
+      tab.setAttribute('role', 'tab');
+      // 탭에 묶음의 색 세 개를 미리 보여줘 글자를 안 읽어도 고를 수 있게
+      const dots = group.tubes
+        .slice(1, 4)
+        .map((tube) => `<span class="tube-tab__dot" style="--tube-color: rgb(${TUBES[tube].join(',')})"></span>`)
+        .join('');
+      tab.innerHTML = `<span class="tube-tab__dots" aria-hidden="true">${dots}</span>${group.name}`;
+      tabs.append(tab);
+
+      group.tubes.forEach((tube, index) => {
+        const button = document.createElement('button');
+        button.className = 'tube';
+        button.dataset.tube = tube;
+        button.dataset.group = group.id;
+        button.setAttribute('aria-label', `${TUBE_NAMES[tube]} 물감`);
+        button.style.setProperty('--tube-color', `rgb(${TUBES[tube].join(',')})`);
+        button.style.setProperty('--i', String(index));
+        button.innerHTML = `<span class="tube__body"></span><span class="tube__label"></span>
+          <span class="tube__name">${TUBE_NAMES[tube]}</span>
+          <svg class="tube__cap" viewBox="0 0 48 48" aria-hidden="true">${CAP_SHAPES[tube] ?? DEFAULT_CAP}</svg>`;
+        drawer.append(button);
+      });
+    }
+    this.showTubeGroup(TUBE_GROUPS[0].id, false);
+  }
+
+  /** 물감 묶음 탭 전환. 짜고 있던 튜브가 숨으면 lostpointercapture로 짜기가 끝난다 */
+  private showTubeGroup(id: TubeGroup['id'], animate: boolean): void {
+    for (const tab of document.querySelectorAll<HTMLElement>('.tube-tab')) {
+      const selected = tab.dataset.group === id;
+      tab.classList.toggle('is-selected', selected);
+      tab.setAttribute('aria-selected', String(selected));
+    }
+    const drawer = $('#tube-drawer');
+    for (const tube of document.querySelectorAll<HTMLElement>('.tube')) tube.hidden = tube.dataset.group !== id;
+    // 튜브가 하나씩 튀어나오는 연출. 같은 탭을 다시 눌러도 다시 시작되게 클래스를 뺐다가 넣는다
+    drawer.classList.remove('is-switching');
+    if (animate) {
+      void drawer.offsetWidth;
+      drawer.classList.add('is-switching');
     }
   }
 
@@ -193,6 +233,14 @@ export class App {
     drawer.addEventListener('pointerup', endSqueeze);
     drawer.addEventListener('pointercancel', endSqueeze);
     drawer.addEventListener('lostpointercapture', endSqueeze);
+
+    $('#tube-tabs').addEventListener('click', (e) => {
+      const tab = (e.target as HTMLElement).closest<HTMLElement>('.tube-tab');
+      if (!tab) return;
+      this.endSqueeze();
+      this.sound.pop();
+      this.showTubeGroup(tab.dataset.group as TubeGroup['id'], true);
+    });
 
     $('#undo-squeeze').addEventListener('click', () => this.undoSqueeze());
     $('#done-button').addEventListener('click', () => this.finish());
@@ -297,10 +345,22 @@ export class App {
       this.swing = null;
       this.camera.position.copy(target);
       this.camera.lookAt(0, 0, 0);
+      this.viewShift = this.viewShiftTarget();
+      this.applyViewShift();
       onDone?.();
     }
     this.hideHint();
     this.wake();
+  }
+
+  private viewShiftTarget(): number {
+    return this.mode === 'mix' ? MIX_VIEW_SHIFT_PX : 0;
+  }
+
+  private applyViewShift(): void {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    this.camera.setViewOffset(width, height, 0, this.viewShift, width, height);
   }
 
   private cameraTarget(): THREE.Vector3 {
@@ -559,9 +619,13 @@ export class App {
     button.setAttribute('aria-label', muted ? '소리 켜기' : '소리 끄기');
   }
 
+  /** 누르기 모드: 내가 만든 색 메달. 섞기 모드: 물감을 짜면 '저으면 이 색이 돼요' 미리보기 */
   private updateMedal(): void {
     const rgb = this.paint.finalRgb();
-    $('#medal').style.setProperty('--medal-color', `rgb(${rgb.join(',')})`);
+    const medal = $('#medal');
+    medal.style.setProperty('--medal-color', `rgb(${rgb.join(',')})`);
+    medal.hidden = this.mode === 'mix' && this.paint.getBlobs().length === 1;
+    medal.setAttribute('aria-label', this.mode === 'mix' ? '완성하면 될 색' : '내가 만든 색');
   }
 
   // ── 연출 (6A, 9A) ─────────────────────────────
@@ -620,7 +684,7 @@ export class App {
     let y = window.innerHeight / 2;
     let hint: string;
     if (this.mode === 'mix' && this.paint.getBlobs().length === 1) {
-      const tube = document.querySelector<HTMLElement>('.tube[data-tube="blue"]')!.getBoundingClientRect();
+      const tube = document.querySelector<HTMLElement>('.tube:not([hidden])')!.getBoundingClientRect();
       x = tube.left + tube.width / 2;
       y = tube.top + tube.height / 2;
       hint = 'tap';
@@ -696,6 +760,14 @@ export class App {
         this.swing = null;
         done?.();
       }
+    }
+
+    const shiftTarget = this.viewShiftTarget();
+    if (this.viewShift !== shiftTarget) {
+      const step = (shiftTarget - this.viewShift) * Math.min(1, dt * 6);
+      this.viewShift = Math.abs(shiftTarget - this.viewShift) < 0.5 ? shiftTarget : this.viewShift + step;
+      this.applyViewShift();
+      animating = true;
     }
 
     if (this.bounceStartedAt >= 0) {
@@ -776,16 +848,7 @@ export class App {
     // 1A: 공이 화면 짧은 변의 55%가 되도록 세로 시야각 조정 (기본 거리 기준)
     const fraction = BALL_SCREEN_FRACTION * (Math.min(width, height) / height);
     this.camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(1 / (fraction * CAMERA_DISTANCE)));
-    this.camera.updateProjectionMatrix();
+    this.applyViewShift(); // updateProjectionMatrix 포함
     this.wake();
   }
 }
-
-const TUBE_NAMES: Record<TubeId, string> = {
-  white: '흰색',
-  red: '빨강',
-  pink: '분홍',
-  yellow: '노랑',
-  blue: '파랑',
-  black: '검정',
-};

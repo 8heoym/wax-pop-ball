@@ -1,4 +1,6 @@
 // 두툼한 둥근 아이콘 (Design review 12A: 선 굵기 3px 이상, 이모지 금지). currentColor 사용.
+import type { TubeId } from './palette';
+
 const svg = (body: string) =>
   `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
 
@@ -17,12 +19,15 @@ export const ICONS = {
   newClay: svg('<circle cx="22" cy="28" r="12"/><path d="M38 6v8M34 10h8"/>'),
 } as const;
 
-/** 색약 대비 튜브 뚜껑 모양 (Design review 15A) */
-export const CAP_SHAPES = {
+/** 둥근 기본 뚜껑. 파스텔·진한 튜브는 이름이 적혀 있어 모양으로 구분하지 않는다 */
+export const DEFAULT_CAP = '<rect x="11" y="8" width="26" height="32" rx="9"/>';
+
+/** 색약 대비 기본 튜브 뚜껑 모양 (Design review 15A) */
+export const CAP_SHAPES: Partial<Record<TubeId, string>> = {
   white: '<path d="M24 6l14 18-14 18-14-18z"/>',
   red: '<circle cx="24" cy="24" r="16"/>',
   pink: '<path d="M24 40C10 30 6 22 10 15c4-6 11-5 14 1 3-6 10-7 14-1 4 7 0 15-14 25z"/>',
   yellow: '<path d="M24 5l5.6 12.4 13.4 1.4-10 9.1 2.8 13.2L24 34.4 12.2 41.1 15 27.9l-10-9.1 13.4-1.4z"/>',
   blue: '<rect x="9" y="9" width="30" height="30" rx="4"/>',
   black: '<path d="M24 7l18 32H6z"/>',
-} as const;
+};
